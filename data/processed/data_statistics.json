@@ -1,0 +1,41 @@
+{
+  "total_snippets": 1215,
+  "language_distribution": {
+    "python": 1206,
+    "javascript": 9
+  },
+  "framework_distribution": {
+    "fastapi": 88,
+    "none": 1127
+  },
+  "source_distribution": {
+    "github": 1215
+  },
+  "quality_distribution": {
+    "good": 1113,
+    "excellent": 82,
+    "fair": 20
+  },
+  "complexity_distribution": {
+    "moderate": 249,
+    "simple": 858,
+    "complex": 108
+  },
+  "size_distribution": {
+    "small": 1001,
+    "medium": 199,
+    "large": 15
+  },
+  "average_metrics": {
+    "line_count": 34.23,
+    "complexity": 2.41,
+    "quality_score": 7.19,
+    "import_count": 0.05
+  },
+  "quality_metrics": {
+    "min_score": 6.0,
+    "max_score": 10.0,
+    "median_score": 7.0,
+    "high_quality_count": 155
+  }
+}

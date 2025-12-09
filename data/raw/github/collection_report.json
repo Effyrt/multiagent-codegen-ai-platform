@@ -1,0 +1,15 @@
+{
+  "collection_summary": {
+    "total_repositories": 3,
+    "successful_repositories": 3,
+    "failed_repositories": 0,
+    "total_snippets": 1722,
+    "average_snippets_per_repo": 574.0
+  },
+  "repository_stats": {
+    "tiangolo/fastapi": 1261,
+    "fastapi-users/fastapi-users": 346,
+    "nsidnev/fastapi-realworld-example-app": 115
+  },
+  "collection_timestamp": "1765077243.960352"
+}

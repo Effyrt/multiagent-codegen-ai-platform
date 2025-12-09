@@ -1,0 +1,275 @@
+# CodeGen AI - Git Ignore File
+
+# ==========================================
+# Documentation Files (ALL excluded)
+# ==========================================
+*.md
+
+# ==========================================
+# Environment Variables (NEVER commit!)
+# ==========================================
+.env
+.env.local
+.env.production
+.env.development
+.env.test
+
+# ==========================================
+# Python
+# ==========================================
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ==========================================
+# Virtual Environments
+# ==========================================
+venv/
+env/
+ENV/
+.venv/
+.env/
+
+# ==========================================
+# IDEs and Editors
+# ==========================================
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.cursor/
+*.sublime-*
+
+# ==========================================
+# OS
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+.AppleDouble
+.LSOverride
+Icon
+
+# ==========================================
+# Jupyter Notebook
+# ==========================================
+.ipynb_checkpoints
+
+# ==========================================
+# Logs
+# ==========================================
+logs/
+*.log
+log.txt
+
+# ==========================================
+# Temporary Files
+# ==========================================
+tmp/
+temp/
+.tmp/
+*.tmp
+*.tmp.py
+*_temp.py
+scratch_*.py
+
+# ==========================================
+# Data Files (Large files - don't commit)
+# ==========================================
+# Raw data from scrapers
+data/raw/github/*.json
+data/raw/github_expanded/*.json
+data/raw/stackoverflow/*.json
+data/raw/documentation/*.jsonl
+
+# Processed data
+data/processed/embeddings.jsonl
+data/processed/embeddings_*.jsonl
+data/processed/clean_snippets.jsonl
+data/processed/vectors_*.npy
+data/processed/*.pkl
+data/processed/*.feather
+data/processed/*.parquet
+
+# BUT keep these important summary/config files:
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+!data/raw/github/collection_report.json
+!data/processed/data_statistics.json
+!data/processed/*_stats.json
+!data/processed/*_report.json
+
+# ==========================================
+# Test Coverage
+# ==========================================
+.coverage
+htmlcov/
+.pytest_cache/
+.tox/
+.nox/
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+
+# ==========================================
+# Test Outputs
+# ==========================================
+test_outputs/
+test_results/
+sandbox/
+
+# ==========================================
+# Documentation Build
+# ==========================================
+docs/_build/
+docs/build/
+
+# ==========================================
+# Docker
+# ==========================================
+.dockerignore
+
+# ==========================================
+# Node.js (if any frontend assets)
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ==========================================
+# Database
+# ==========================================
+*.db
+*.sqlite
+*.sqlite3
+
+# ==========================================
+# Airflow (if running locally)
+# ==========================================
+airflow/
+airflow.db
+airflow.cfg
+airflow-webserver.pid
+standalone_admin_password.txt
+unittests.cfg
+
+# ==========================================
+# API Keys and Secrets
+# ==========================================
+secrets/
+keys/
+*.key
+*.pem
+*secret*
+*credential*
+
+# ==========================================
+# Backup files
+# ==========================================
+*.bak
+*.backup
+
+# ==========================================
+# Compiled extensions
+# ==========================================
+*.pyd
+*.pyo
+
+# ==========================================
+# Distribution / packaging
+# ==========================================
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# ==========================================
+# PyInstaller
+# ==========================================
+*.manifest
+*.spec
+
+# ==========================================
+# mypy
+# ==========================================
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# ==========================================
+# Pyre type checker
+# ==========================================
+.pyre/
+
+# ==========================================
+# Cython debug symbols
+# ==========================================
+cython_debug/
+
+# ==========================================
+# Large Model Files (checkpoints, weights)
+# ==========================================
+*.h5
+*.hdf5
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+models/checkpoints/
+
+# ==========================================
+# Vector Database Cache
+# ==========================================
+.pinecone/
+.chroma/
+.faiss/
+
+# ==========================================
+# OpenAI Cache
+# ==========================================
+.openai_cache/
+
+# ==========================================
+# Project-specific large files
+# ==========================================
+*.embedding.json
+embeddings_cache/

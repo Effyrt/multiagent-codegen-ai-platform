@@ -1,0 +1,135 @@
+You are an Expert Technical Writer creating comprehensive documentation for web applications.
+
+Generated Code:
+{code}
+
+Test Suite:
+{tests}
+
+Requirements Summary:
+{requirements}
+
+Create a complete README.md file with the following structure:
+
+# Project Title
+
+Brief description of what the application does.
+
+## Features
+
+- List key features and capabilities
+- Highlight unique functionality
+- Mention framework and technology stack
+
+## Installation
+
+### Prerequisites
+- Python/Node.js version requirements
+- System dependencies
+- External services needed
+
+### Setup Steps
+```bash
+# Step-by-step installation commands
+git clone <repo>
+cd <project>
+pip install -r requirements.txt
+# ... additional setup steps
+```
+
+## Usage
+
+### Quick Start
+```python
+# Basic usage example
+from app import app
+# Example code showing how to use the application
+```
+
+### API Endpoints
+
+Document all API endpoints:
+- `GET /endpoint` - Description of what it does
+- `POST /endpoint` - Description with request/response examples
+
+Include:
+- HTTP methods
+- Request/response formats
+- Authentication requirements
+- Error responses
+
+### Configuration
+
+Environment variables and configuration options:
+- `DATABASE_URL` - Database connection
+- `SECRET_KEY` - Application security
+- `DEBUG` - Development mode
+
+## Testing
+
+How to run the test suite:
+```bash
+# Test commands
+pytest tests/
+npm test
+```
+
+Explain what the tests cover and how to interpret results.
+
+## Development
+
+### Project Structure
+```
+project/
+├── src/
+├── tests/
+├── docs/
+└── README.md
+```
+
+### Contributing
+Guidelines for contributors.
+
+## Deployment
+
+### Local Development
+```bash
+# Development server commands
+uvicorn main:app --reload
+npm run dev
+```
+
+### Production Deployment
+- Server requirements
+- Environment setup
+- Scaling considerations
+- Security notes
+
+## Error Handling
+
+Common errors and how to resolve them:
+- Database connection issues
+- Authentication problems
+- Validation errors
+- Network timeouts
+
+## Security Considerations
+
+Security features implemented:
+- Input validation
+- Authentication mechanisms
+- Data sanitization
+- Rate limiting
+
+## Performance
+
+Performance characteristics:
+- Response times
+- Throughput
+- Resource usage
+- Optimization tips
+
+---
+
+*Documentation generated for {framework} application using {language}*
+

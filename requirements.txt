@@ -1,0 +1,77 @@
+# CodeGen AI - Multi-Agent Code Generation Platform
+# Requirements for DAMG 7245 Final Project
+
+# Core Python Version
+# Requires Python 3.9+ (currently using 3.9.10)
+
+# LLM & AI Libraries
+openai>=1.0.0                    # OpenAI API client
+tiktoken>=0.5.0                  # OpenAI tokenizer for embeddings
+crewai>=0.11.0                   # Multi-agent orchestration (latest available)
+langchain>=0.1.0                 # LLM utilities and chains
+langchain-openai>=0.0.2          # OpenAI integration for LangChain
+pinecone-client>=3.0.0           # Vector database client
+
+# Web Framework & API
+fastapi==0.109.0                 # Modern async web framework
+uvicorn[standard]==0.27.0        # ASGI server for FastAPI
+pydantic==2.5.0                  # Data validation and serialization
+python-multipart==0.0.6          # Multipart form data for FastAPI
+
+# Frontend
+streamlit==1.29.0                # Web dashboard framework
+requests==2.31.0                 # HTTP client for API calls
+plotly==5.17.0                   # Charts for analytics (optional)
+
+# Data Processing & Analysis
+pandas==2.1.4                    # Data manipulation
+numpy==1.26.2                    # Numerical computing
+scikit-learn==1.3.2              # ML utilities (optional)
+
+# Web Scraping & APIs
+beautifulsoup4==4.12.2           # HTML parsing
+lxml==4.9.4                      # XML/HTML parser
+requests==2.31.0                # HTTP client (duplicate for clarity)
+PyGitHub==2.1.1                  # GitHub API client
+
+# Code Analysis & Quality
+ast==0.9.0                       # Abstract Syntax Tree parsing
+pylint==3.0.3                    # Code quality analysis
+mypy==1.7.1                      # Type checking
+bandit==1.7.6                    # Security scanning
+black==23.12.1                   # Code formatting
+isort==5.13.2                    # Import sorting
+radon==6.0.1                     # Complexity analysis
+
+# Testing Framework
+pytest==7.4.4                    # Testing framework
+pytest-asyncio==0.23.2           # Async testing support
+pytest-cov==4.1.0                # Coverage reporting
+httpx==0.26.0                    # Async HTTP client for testing
+
+# Environment & Configuration
+python-dotenv==1.0.0             # Environment variable management
+slowapi==0.1.9                   # Rate limiting
+pyyaml==6.0.1                    # YAML configuration files
+
+# Utilities
+click==8.1.7                     # Command line interface
+rich==13.7.0                     # Beautiful terminal output
+tqdm==4.66.1                     # Progress bars
+loguru==0.7.2                    # Logging enhancement
+
+# Development & Debugging
+ipykernel==6.27.1                # Jupyter kernel (optional)
+jupyter==1.0.0                   # Jupyter notebook (optional)
+
+# Docker (for containerization)
+# docker==6.1.3                    # Docker SDK (install separately if needed)
+
+# Note: Some packages may need to be installed separately:
+# - Docker Desktop for container execution
+# - Git for version control
+# - Make sure to use Python 3.11+ for best compatibility
+
+
+
+

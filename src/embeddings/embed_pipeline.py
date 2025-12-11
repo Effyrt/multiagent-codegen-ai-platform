@@ -40,12 +40,28 @@ openai.api_key = OPENAI_API_KEY
 # --------------------------------------------
 ENC = tiktoken.get_encoding("cl100k_base")
 
+# --------------------------------------------
+# Detect OpenAI API version (new vs old)
+# --------------------------------------------
+import openai
+try:
+    from openai import OpenAI
+    client = OpenAI(api_key=OPENAI_API_KEY)
+    USE_NEW_OPENAI = True
+except Exception:
+    # old API (openai==0.28)
+    client = None
+    USE_NEW_OPENAI = False
+
+
+
 def count_tokens(text: str):
-    return len(ENC.encode(text))
+    return len(ENC.encode(text, disallowed_special=()))
+
 
 def chunk_text(text: str, max_tokens=2000, overlap=200):
     """Split long code into chunks small enough for OpenAI embeddings."""
-    tokens = ENC.encode(text)
+    tokens = ENC.encode(text, disallowed_special=())
     chunks = []
     start = 0
 
@@ -86,32 +102,50 @@ def load_snippets(path="data/processed/final_snippets/snippets_final.jsonl"):
     print(f"🔍 Loaded {len(snippets)} snippets")
     return snippets
 
+
+
+def embed_single_text(text: str):
+    """ openai>=1.0 & openai==0.28 embedding """
+    if USE_NEW_OPENAI:
+        # New API
+        resp = client.embeddings.create(
+            model=EMBED_MODEL,
+            input=text
+        )
+        return resp.data[0].embedding
+    else:
+        # Old API
+        resp = openai.Embedding.create(
+            model=EMBED_MODEL,
+            input=text
+        )
+        return resp["data"][0]["embedding"]
+
+
+
 # --------------------------------------------
 # OpenAI Embedding
 # --------------------------------------------
 
 def embed_text(text: str):
     """Embed text with chunking for long code."""
-    # 1. Token count check
     tok = count_tokens(text)
 
     # If text is short, embed directly
     if tok <= 2000:
         try:
-            resp = openai.Embedding.create(model=EMBED_MODEL, input=text)
-            return resp["data"][0]["embedding"]
+            return embed_single_text(text)
         except Exception as e:
             print("❌ OpenAI embedding error:", e)
             return None
 
-    # 2. If too long → chunk it
+    # Too long → chunk it
     chunks = chunk_text(text)
     vectors = []
 
     for ch in chunks:
         try:
-            resp = openai.Embedding.create(model=EMBED_MODEL, input=ch)
-            vec = resp["data"][0]["embedding"]
+            vec = embed_single_text(ch)   # ← 使用兼容函數
             vectors.append(vec)
         except Exception as e:
             print("❌ Chunk embedding failed:", e)
@@ -120,8 +154,8 @@ def embed_text(text: str):
     if not vectors:
         return None
 
-    # 3. Aggregate embeddings (average)
     return np.mean(np.array(vectors), axis=0).tolist()
+
 
 # --------------------------------------------
 # Pinecone Setup
@@ -219,7 +253,7 @@ def run_embedding_pipeline(
     upsert_snippets(index, snippets)
 
     print("🎉 Embedding pipeline completed inside Airflow task.")
-    
+
 # --------------------------------------------
 # Main
 # --------------------------------------------

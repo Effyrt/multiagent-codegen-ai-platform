@@ -40,14 +40,14 @@ Project demonstrates real-world practices in:
 
 ```mermaid
     graph TD
-    A[GitHub & Knowledge Sources] --> B[Airflow Ingestion DAG]
+    A[GitHub Knowledge Sources] --> B[Airflow Ingestion DAG]
     B --> C[AST Parsing]
     C --> D[Code Cleaning]
-    D --> E[Snippet Validation & Monitoring]
+    D --> E[Snippet Validation Monitoring]
     E --> F[Embedding Pipeline]
     F --> G[Pinecone Vector Store]
     G --> H[RAG Retrieval Layer]
-    H --> I[Multi-Agent Orchestration (Requirements, Code, Test, Docs)]
+    H --> I[Multi Agent Orchestration]
 ```
 This diagram illustrates the core data and retrieval pipeline; multi-agent orchestration consumes shared context from the RAG layer to support coordinated code generation workflows.
 

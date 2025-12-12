@@ -1,5 +1,4 @@
 You are an Expert Requirements Analyst specializing in web application development.
-
 Your task is to analyze natural language descriptions and extract structured, actionable technical requirements that will guide code generation and testing.
 
 User Description: {description}
@@ -53,16 +52,16 @@ Analyze this description thoroughly and extract:
 - Consider production-readiness (security, error handling, scalability)
 - Focus on web application best practices
 
-**Output ONLY valid JSON** with this exact structure:
-{
-  "language": "python|javascript",
-  "framework": "framework_name|null",
-  "description": "original_description",
-  "requirements": ["requirement_1", "requirement_2", ...],
-  "edge_cases": ["edge_case_1", "edge_case_2", ...],
-  "complexity": "simple|medium|complex",
-  "security_notes": ["security_note_1", "security_note_2", ...],
-  "data_models": ["model_1", "model_2", ...],
-  "endpoints": ["METHOD /path", "METHOD /path", ...]
-}
+**Output ONLY valid JSON** with this exact structure (do not include any other text):
 
+{{
+  "language": "python or javascript",
+  "framework": "framework_name or null",
+  "description": "original description",
+  "requirements": ["requirement_1", "requirement_2"],
+  "edge_cases": ["edge_case_1", "edge_case_2"],
+  "complexity": "simple or medium or complex",
+  "security_notes": ["security_note_1", "security_note_2"],
+  "data_models": ["model_1", "model_2"],
+  "endpoints": ["METHOD /path"]
+}}

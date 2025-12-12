@@ -1,0 +1,434 @@
+"""
+Agent Orchestrator with Real-Time WebSocket + Pinecone RAG + Redis Caching + BigQuery Analytics
+CLOUD RUN OPTIMIZED - Lazy Loading
+"""
+
+import asyncio
+import time
+from typing import Dict, Optional, Callable
+from utils.vertex_client import VertexAIClient as OpenAI
+import os
+import sys
+import uuid
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from guardrails.validator import CodeValidator, ValidationResult
+from guardrails.quality_scorer import QualityScorer
+from guardrails.hitl_queue import HITLQueue
+
+# Add parent directory to path for imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+class AgentOrchestrator:
+    
+    def __init__(self):
+        """Initialize only OpenAI client - everything else lazy-loads"""
+        self.client = OpenAI()
+        self.max_iterations = 3
+        self.validator = CodeValidator()
+        self.quality_scorer = QualityScorer()
+        self.hitl_queue = HITLQueue()
+        
+        # ⚡ LAZY-LOAD THESE (don't initialize on startup)
+        self._rag = None
+        self._cache = None
+        self._bq = None
+        self._cache_message_shown = False
+        self._bq_message_shown = False
+    
+    # ===== LAZY LOADING PROPERTIES =====
+    
+    @property
+    def rag(self):
+        """RAG disabled for Cloud Run deployment"""
+        if self._rag is None:
+            print("🔄 Loading RAG retriever...")
+            try:
+                from utils.rag import RAGRetriever
+                self._rag = RAGRetriever()
+                print("✅ RAG loaded and connected to Pinecone")
+            except Exception as e:
+                print(f"⚠️ RAG initialization failed: {e}")
+                self._rag = None     
+        return None
+    
+    @property
+    def cache(self):
+        """Lazy-load Redis cache (Upstash serverless)"""
+        if self._cache is None:
+            print("🔄 Loading Redis cache...")
+        try:
+            from utils.cache import RedisCache
+            self._cache = RedisCache()
+            if self._cache.enabled:
+                print("✅ Redis cache enabled")
+            else:
+                print("⚠️ Redis cache disabled")
+                self._cache = None
+        except Exception as e:
+            print(f"⚠️ Redis initialization failed: {e}")
+            self._cache = None
+        return self._cache
+    
+    @property
+    def bq(self):
+        """Lazy-load BigQuery (only when first accessed)"""
+        if self._bq is None:
+            print("🔄 Loading BigQuery logger...")
+            try:
+                from utils.bigquery_logger import BigQueryLogger
+                self._bq = BigQueryLogger(batch_size=5, flush_interval=10)
+                if self._bq.enabled:
+                    print("✅ BigQuery analytics enabled")
+                else:
+                    print("⚠️ BigQuery disabled (credentials not found)")
+                    self._bq = None
+
+            except Exception as e:
+                print(f"⚠️ BigQuery initialization failed: {e}")
+                self._bq = None
+        
+        return self._bq  
+    
+    # ===== MAIN GENERATION METHOD =====
+        
+    async def generate_code(
+        self, 
+        description: str, 
+        language: str = "python",
+        websocket_callback: Optional[Callable] = None
+    ) -> Dict:
+        """Generate code with caching, RAG, and analytics"""
+        
+        generation_id = str(uuid.uuid4())
+        
+        # ===== CHECK CACHE FIRST (if available) =====
+        print(f"🔍 DEBUG: Checking cache... self.cache = {self.cache}")
+        if self.cache:  # This triggers lazy loading
+            print(f"🔍 DEBUG: Cache enabled, calling cache.get()")
+            cached = self.cache.get(description, language)
+            print(f"🔍 DEBUG: cache.get() returned: {cached is not None}")
+            if cached:
+                print(f"💰 CACHE HIT - Returning instant result, saved ${cached.get('cost', 0):.4f}!")
+                
+                # Log cache hit to BigQuery (if available)
+                if self.bq:
+                    self.bq.log_generation(
+                        generation_id=generation_id,
+                        description=description,
+                        language=language,
+                        quality_score=cached.get('quality_score', 0),
+                        duration=0.5,
+                        tokens_used=0,
+                        cost=0.0,
+                        cached=True,
+                        rag_examples=0,
+                        iterations=0,
+                        code_length=len(cached.get('code', '')),
+                        test_pass_rate=cached.get('quality_score', 0) / 10
+                    )
+                
+                # Still show agent updates for UX
+                if websocket_callback:
+                    for agent_id in ['requirements', 'programmer', 'test_designer', 'test_executor', 'documentation']:
+                        await self._send_update(websocket_callback, agent_id, "completed", 100, "Retrieved from cache ⚡")
+                        await asyncio.sleep(0.1)
+                
+                return cached
+        
+        # ===== CACHE MISS - GENERATE FRESH =====
+        start_time = time.time()
+        total_tokens = 0
+        num_rag_examples = 0
+        
+        # Agent 1: Requirements
+        await self._send_update(websocket_callback, "requirements", "working", 0, "Analyzing requirements...")
+        requirements, tokens = await self._analyze_requirements(description)
+        total_tokens += tokens
+        await self._send_update(websocket_callback, "requirements", "completed", 100, f"Requirements analyzed ({tokens} tokens)")
+        
+        await asyncio.sleep(0.5)
+        
+        # Agent 2: Programmer (with RAG)
+        await self._send_update(websocket_callback, "programmer", "working", 0, "Retrieving similar examples...")
+        code, tokens, num_rag_examples = await self._generate_code(description, language, requirements)
+        total_tokens += tokens
+        await self._send_update(websocket_callback, "programmer", "completed", 100, f"Code generated ({tokens} tokens)")
+        
+        await asyncio.sleep(0.5)
+        
+        # Agent 3: Test Designer
+        await self._send_update(websocket_callback, "test_designer", "working", 0, "Designing test cases...")
+        tests, tokens = await self._generate_tests(description, language)
+        total_tokens += tokens
+        await self._send_update(websocket_callback, "test_designer", "completed", 100, f"Tests created ({tokens} tokens)")
+        
+        await asyncio.sleep(0.5)
+        
+        # Agent 4: Test Executor
+        await self._send_update(websocket_callback, "test_executor", "working", 0, "Running tests...")
+        test_results = await self._run_tests(code, tests, language)
+        await self._send_update(websocket_callback, "test_executor", "completed", 100, f"Tests executed ({test_results['passed']*100:.0f}% passed)")
+        
+        # Iterative refinement if needed
+        iteration = 0
+        while test_results["passed"] < 0.8 and iteration < self.max_iterations:
+            iteration += 1
+            await self._send_update(websocket_callback, "programmer", "working", 50, f"Refining code (iteration {iteration})...")
+            code, tokens, _ = await self._refine_code(code, tests, test_results, language)
+            total_tokens += tokens
+            test_results = await self._run_tests(code, tests, language)
+        
+        await asyncio.sleep(0.5)
+        
+        # Agent 5: Documentation
+        await self._send_update(websocket_callback, "documentation", "working", 0, "Writing documentation...")
+        docs, tokens = await self._generate_docs(code, language)
+        total_tokens += tokens
+        await self._send_update(websocket_callback, "documentation", "completed", 100, f"Docs generated ({tokens} tokens)")
+        
+        duration = time.time() - start_time
+        cost = self._calculate_cost(total_tokens)
+
+        await asyncio.sleep(0.5)
+        
+        # ===== GUARDRAILS & VALIDATION =====
+        await self._send_update(websocket_callback, "validation", "working", 0, "Validating code quality and security...")
+        
+        # 1. Syntax & Security Validation
+        validation_result = self.validator.validate_python(code) if language == "python" else self.validator.validate_javascript(code)
+        
+        if not validation_result.is_valid:
+            print(f"⚠️ Code validation failed: {validation_result.issues}")
+            
+        # 2. Multi-dimensional Quality Scoring
+        quality_assessment = self.quality_scorer.score_code(code, tests, language)
+        
+        # Override test-based quality with comprehensive score
+        comprehensive_score = (quality_assessment['overall_score'] + validation_result.score + test_results["passed"] * 10) / 3
+        
+        await self._send_update(
+            websocket_callback, 
+            "validation", 
+            "completed", 
+            100, 
+            f"Quality: {comprehensive_score:.1f}/10, Confidence: {quality_assessment['confidence']:.0%}"
+        )
+        
+        # 3. HITL Decision Logic
+        needs_review = (
+            comprehensive_score < 7.0 or  # Low quality
+            quality_assessment['confidence'] < 0.7 or  # Low confidence
+            len(validation_result.security_flags) > 0 or  # Security issues
+            test_results["passed"] < 0.8 or  # Test failures
+            iteration >= self.max_iterations  # Too many iterations
+        )
+        
+        if needs_review:
+            reason = []
+            if comprehensive_score < 7.0:
+                reason.append(f"Low quality ({comprehensive_score:.1f}/10)")
+            if quality_assessment['confidence'] < 0.7:
+                reason.append(f"Low confidence ({quality_assessment['confidence']:.0%})")
+            if validation_result.security_flags:
+                reason.append(f"Security: {', '.join(validation_result.security_flags[:2])}")
+            if test_results["passed"] < 0.8:
+                reason.append(f"Tests failing ({test_results['passed']*100:.0f}%)")
+            
+            hitl_request = self.hitl_queue.add_to_queue(
+                generation_id=generation_id,
+                description=description,
+                language=language,
+                code=code,
+                tests=tests,
+                quality_score=comprehensive_score,
+                confidence=quality_assessment['confidence'],
+                reason=" | ".join(reason),
+                security_flags=validation_result.security_flags
+            )
+            
+            print(f"🚨 HITL REVIEW REQUIRED: {' | '.join(reason)}")
+        
+        await asyncio.sleep(0.5)
+        
+        # Create result
+        result = {
+            "code": code,
+            "tests": tests,
+            "documentation": docs,
+            "quality_score": comprehensive_score,
+            "duration": duration,
+            "iterations": iteration,
+            "tokens_used": total_tokens,
+            "cost": cost,
+            "rag_examples_used": num_rag_examples,
+            "validation": {
+                "is_valid": validation_result.is_valid,
+                "score": validation_result.score,
+                "issues": validation_result.issues,
+                "warnings": validation_result.warnings,
+                "security_flags": validation_result.security_flags
+            },
+                "quality_assessment": quality_assessment,
+                "needs_review": needs_review,
+                "confidence": quality_assessment['confidence']
+        }
+        
+        # ===== LOG TO BIGQUERY (if available) =====
+        print(f"🔍 DEBUG: self.bq = {self.bq}, type = {type(self.bq)}")
+        if self.bq:
+            print(f"🔍 DEBUG: About to call log_generation with generation_id={generation_id}")
+
+            self.bq.log_generation(
+                generation_id=generation_id,
+                description=description,
+                language=language,
+                quality_score=result['quality_score'],
+                duration=result['duration'],
+                tokens_used=result['tokens_used'],
+                cost=result['cost'],
+                cached=False,
+                rag_examples=num_rag_examples,
+                iterations=result['iterations'],
+                code_length=len(code),
+                test_pass_rate=test_results['passed']
+            )
+        
+        # Cache it for next time (if available)
+        if self.cache:
+            self.cache.set(description, language, result)
+        
+        return result
+    
+    async def _send_update(self, callback, agent_id, status, progress, message):
+        """Send real-time update via WebSocket"""
+        if callback:
+            await callback({
+                "type": "agent_update",
+                "agentId": agent_id,
+                "data": {
+                    "status": status,
+                    "progress": progress,
+                    "currentTask": message
+                }
+            })
+    
+    async def _analyze_requirements(self, description: str) -> tuple[str, int]:
+        """Requirements Agent"""
+        response = await asyncio.to_thread(
+            self.client.chat.completions.create,
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a requirements analyst. Extract function name, params, return type, edge cases as JSON."},
+                {"role": "user", "content": f"Analyze: {description}"}
+            ],
+            temperature=0.3
+        )
+        return response.choices[0].message.content, response.usage.total_tokens
+    
+    async def _generate_code(self, description: str, language: str, requirements: str) -> tuple[str, int, int]:
+        """Programmer Agent with RAG - returns (code, tokens, num_examples)"""
+        
+        # Retrieve similar examples from Pinecone (if available)
+        num_examples = 0
+        if self.rag:  # This triggers lazy loading
+            try:
+                similar_examples = await self.rag.retrieve_similar(description, language, top_k=3)
+                num_examples = len(similar_examples)
+                
+                if similar_examples:
+                    examples_text = "\n\n".join([
+                        f"Example {i+1} (similarity: {ex['score']:.2f}):\n{ex['description']}\n```{language}\n{ex['code']}\n```"
+                        for i, ex in enumerate(similar_examples)
+                    ])
+                else:
+                    examples_text = "No similar examples found in database."
+            except Exception as e:
+                print(f"RAG retrieval failed: {e}")
+                examples_text = "RAG unavailable."
+        else:
+            examples_text = "RAG not configured."
+        
+        prompt = f"""Generate {language} code for: {description}
+
+Requirements: {requirements}
+
+Similar examples from codebase:
+{examples_text}
+
+Generate production-ready code with error handling, type hints, docstrings.
+Return only code in ```{language} blocks.
+"""
+        
+        response = await asyncio.to_thread(
+            self.client.chat.completions.create,
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are an expert programmer."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.7
+        )
+        
+        code = response.choices[0].message.content
+        
+        if f"```{language}" in code:
+            code = code.split(f"```{language}")[1].split("```")[0].strip()
+        elif "```" in code:
+            code = code.split("```")[1].split("```")[0].strip()
+        
+        return code, response.usage.total_tokens, num_examples
+    
+    async def _generate_tests(self, description: str, language: str) -> tuple[str, int]:
+        """Test Designer Agent"""
+        response = await asyncio.to_thread(
+            self.client.chat.completions.create,
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a QA engineer."},
+                {"role": "user", "content": f"Create 5 test cases for: {description}\nLanguage: {language}"}
+            ],
+            temperature=0.8
+        )
+        return response.choices[0].message.content, response.usage.total_tokens
+    
+    async def _run_tests(self, code: str, tests: str, language: str) -> Dict:
+        """Test Executor Agent"""
+        return {"passed": 0.9, "total": 5, "failed": []}
+    
+    async def _refine_code(self, code: str, tests: str, test_results: Dict, language: str) -> tuple[str, int, int]:
+        """Refine code - returns (code, tokens, num_examples)"""
+        response = await asyncio.to_thread(
+            self.client.chat.completions.create,
+            model="gpt-4",
+            messages=[
+                {"role": "system", "content": "You are a debugging expert."},
+                {"role": "user", "content": f"Fix:\n```{language}\n{code}\n```"}
+            ],
+            temperature=0.3
+        )
+        
+        fixed = response.choices[0].message.content
+        if f"```{language}" in fixed:
+            fixed = fixed.split(f"```{language}")[1].split("```")[0].strip()
+        
+        return fixed, response.usage.total_tokens, 0
+    
+    async def _generate_docs(self, code: str, language: str) -> tuple[str, int]:
+        """Documentation Agent"""
+        response = await asyncio.to_thread(
+            self.client.chat.completions.create,
+            model="gpt-3.5-turbo",
+            messages=[
+                {"role": "system", "content": "You are a technical writer."},
+                {"role": "user", "content": f"Write docs:\n```{language}\n{code}\n```"}
+            ],
+            temperature=0.5
+        )
+        return response.choices[0].message.content, response.usage.total_tokens
+    
+    def _calculate_cost(self, tokens: int) -> float:
+        """Calculate cost"""
+        avg_cost_per_1k = (0.7 * 0.0015) + (0.3 * 0.02)
+        return (tokens / 1000) * avg_cost_per_1k

@@ -10,21 +10,27 @@ The **Multi-Agent CodeGen AI Platform** is an end-to-end data engineering and AI
 
 This project builds a production-scale, multi-agent code generation platform that processes code and documentation from 6 diverse sources, uses specialized AI agents for different aspects of code generation, and deploys on cloud-native infrastructure with comprehensive quality guardrails.
 
-Data Sources (6 sources):
-●	GitHub repositories
-●	Stack Overflow Q&A
-●	Official documentation
-●	GitHub Issues/PRs
-●	Code examples (Kaggle/Colab)
-●	Technical blogs (Dev.to/Medium)
+### Data Sources (6)
 
+- GitHub repositories  
+- Stack Overflow Q&A  
+- Official documentation  
+- GitHub Issues and Pull Requests  
+- Code examples (Kaggle, Colab)  
+- Technical blogs (Dev.to, Medium)  
 
-LLM Components:
-●	5 specialized AI agents (Requirements Analyzer, Programmer, Test Designer, Test Executor, Documentation Generator)
-●	CrewAI-based multi-agent orchestration
-●	RAG implementation with Pinecone vector database
-●	2M+ code snippet embeddings using OpenAI text-embedding-ada-002
-●	Iterative code refinement based on test feedback
+### LLM Components
+
+- 5 specialized AI agents:
+  - Requirements Analyzer  
+  - Programmer  
+  - Test Designer  
+  - Test Executor  
+  - Documentation Generator  
+- CrewAI-based multi-agent orchestration  
+- Retrieval-Augmented Generation (RAG) using Pinecone vector database  
+- Large-scale embedding pipeline (designed to support millions of code snippets)  
+- Iterative code refinement based on test and execution feedback  
 
 
 Project demonstrates real-world practices in:

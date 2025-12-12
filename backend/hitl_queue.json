@@ -1,0 +1,17 @@
+{
+  "f2cdba4e-dbc6-4576-b4b0-1bd2b51c8f41": {
+    "generation_id": "f2cdba4e-dbc6-4576-b4b0-1bd2b51c8f41",
+    "description": "create a function that uses os.system to execute shell commands",
+    "language": "python",
+    "code": "import os\n\ndef execute_shell_command(command: str) -> int:\n    \"\"\"\n    Execute a shell command.\n\n    Args:\n        command: The shell command to execute.\n\n    Returns:\n        int: Returns 0 if the command was executed successfully. \n             Returns -1 if the command is empty or invalid. \n             Returns the exit code of the command if its execution was unsuccessful.\n\n    Raises:\n        TypeError: If the command is not a string.\n    \"\"\"\n    if not isinstance(command, str):\n        raise TypeError(\"The command must be a string.\")\n        \n    if not command:\n        print(\"The command is empty.\")\n        return -1\n\n    exit_code = os.system(command)\n\n    if exit_code != 0:\n        print(\"The command was not executed successfully.\")\n        return exit_code\n\n    print(\"The command was executed successfully.\")\n    return 0",
+    "tests": "Test Case 1:\nTest Name: test_execute_shell_command_valid\nDescription: Verify that the function successfully executes a valid shell command and returns the output.\nTest Input: \"ls -l\"\nExpected Output: The directory listing in long format.\n\nTest Case 2:\nTest Name: test_execute_shell_command_invalid\nDescription: Verify that the function handles invalid shell commands gracefully.\nTest Input: \"invalid_command\"\nExpected Output: Error message indicating that the command is invalid.\n\nTest Case 3:\nTest Name: test_execute_shell_command_empty\nDescription: Verify that the function returns an error message when an empty command is provided.\nTest Input: \"\"\nExpected Output: Error message indicating that the command is empty.\n\nTest Case 4:\nTest Name: test_execute_shell_command_permission_denied\nDescription: Verify that the function handles permission denied errors appropriately.\nTest Input: \"sudo ls\"\nExpected Output: Error message indicating permission denied.\n\nTest Case 5:\nTest Name: test_execute_shell_command_timeout\nDescription: Verify that the function handles timeouts when executing long-running shell commands.\nTest Input: \"sleep 10\"\nExpected Output: Error message indicating timeout reached.",
+    "quality_score": 8.066666666666666,
+    "confidence": 0.75,
+    "reason": "Security: Potential command_injection: os\\.system",
+    "security_flags": [
+      "Potential command_injection: os\\.system"
+    ],
+    "timestamp": "2025-12-11T06:49:58.437276",
+    "status": "pending"
+  }
+}

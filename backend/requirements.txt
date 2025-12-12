@@ -1,0 +1,33 @@
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+pydantic==2.5.0
+python-dotenv==1.0.0
+requests==2.31.0
+httpx==0.27.0
+
+# Pinecone (specific version that works)
+pinecone-client==2.2.4
+
+# Google Cloud (compatible versions)
+google-api-core==2.11.0
+google-auth==2.22.0
+google-cloud-core==2.3.3
+google-cloud-aiplatform==1.25.0
+google-cloud-bigquery==3.11.0
+protobuf==4.23.0
+grpcio==1.56.0
+
+# OpenAI
+openai==1.54.0
+
+# Redis for caching
+redis==5.0.1
+
+# Docker for test execution
+docker==7.0.0
+
+# WebSockets
+websockets==12.0
+
+# Multipart forms
+python-multipart==0.0.6

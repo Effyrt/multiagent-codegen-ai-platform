@@ -87,7 +87,7 @@ sequenceDiagram
 ```md
 ## 4. Repository Structure
 
-```
+```text
 .
 ├── dags/                     # Airflow DAG definitions
 │   └── ai_codegen_ingest_dag.py

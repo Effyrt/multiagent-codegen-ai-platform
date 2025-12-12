@@ -82,7 +82,6 @@ def build_final_snippet(snip):
         "code": code,     # <-- schema requires `code`
         "imports": snip.get("imports", []),
 
-        # 🔧 新增：真正計算 complexity，而不是預設 1.0
         "complexity": float(compute_cyclomatic_complexity(code)),
     }
 
@@ -121,6 +120,15 @@ def build_snippet_corpus(
     print(f"🎉 Final RAG snippet corpus saved → {output_path}")
 
     return final_snippets
+
+
+
+def build_final_snippets():
+    """
+    Unified DAG expects this function name build_snippet_corpus().
+    """
+    print("[Wrapper] build_final_snippets() → calling build_snippet_corpus()")
+    return build_snippet_corpus()
 
 
 # ============================================================

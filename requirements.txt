@@ -1,5 +1,55 @@
-pinecone
-openai
-requests
-python-dotenv
-tqdm
+# === LLM & Embeddings ===
+openai==1.57.2
+tiktoken==0.8.0
+pinecone-client==5.0.1
+sentence-transformers==3.3.1
+
+# === Core Utilities ===
+python-dotenv==1.0.1
+requests==2.32.3
+tqdm==4.67.1
+pyyaml==6.0.2
+
+# === Data Processing ===
+pandas==2.2.3
+numpy==1.26.4
+
+# === GitHub API ===
+PyGithub==2.5.0
+GitPython==3.1.43
+
+# === Multi-Agent Framework ===
+crewai==0.86.0
+langchain==0.3.13
+langchain-openai==0.2.14
+langchain-community==0.3.13
+
+# === Backend (FastAPI) ===
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+python-multipart==0.0.20
+
+# === Frontend (Streamlit) ===
+streamlit==1.41.1
+plotly==5.24.1
+
+# === Code Analysis ===
+radon==6.0.1
+tree-sitter==0.23.2
+
+# === Vector DB ===
+chromadb==0.5.23
+faiss-cpu==1.9.0
+
+# === BigQuery ===
+google-cloud-bigquery==3.27.0
+google-auth==2.37.0
+
+# === Web Scraping ===
+beautifulsoup4==4.12.3
+
+# === Testing ===
+pytest==8.3.4
+pytest-asyncio==0.24.0
+httpx==0.28.1

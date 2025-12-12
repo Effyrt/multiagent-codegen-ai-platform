@@ -180,6 +180,19 @@ def parse_multiple_repos(repo_paths: list):
     return all_items
 
 
+
+def parse_tmp_ast_inputs(tmp_dir="data/tmp/ast_inputs"):
+    """
+    Parse all .py snippet files generated from StackOverflow/Docs
+    """
+    items = []
+    for py_file in Path(tmp_dir).glob("*.py"):
+        items.extend(parse_file("external_snippet", str(py_file)))
+    return items
+
+
+
+
 # ============================================================
 # Save to JSONL
 # ============================================================
@@ -202,16 +215,12 @@ def save_jsonl(items, output_dir):
 # ============================================================
 
 if __name__ == "__main__":
-    repos = [
-    "data/raw/fastapi-master",
-    "data/raw/flask-main",
-    "data/raw/pandas-main",
-    "data/raw/requests-main",
-    ]  
+    items = []
 
-    items = parse_multiple_repos(repos)
+    #  StackOverflow + Docs snippet
+    items.extend(parse_tmp_ast_inputs("data/tmp/ast_inputs"))
+
     print(f"🔍 Total parsed snippets: {len(items)}")
-
     save_jsonl(items, "data/processed/ast")
-
     print("🎉 AST parsing completed!")
+

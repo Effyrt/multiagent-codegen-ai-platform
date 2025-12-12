@@ -19,6 +19,7 @@ import json
 import openai
 from pinecone import Pinecone
 from dotenv import load_dotenv
+from openai import OpenAI
 
 load_dotenv()
 
@@ -30,6 +31,50 @@ EMBED_MODEL = os.getenv("EMBEDDING_MODEL", "text-embedding-ada-002")
 
 openai.api_key = OPENAI_API_KEY
 pc = Pinecone(api_key=PINECONE_API_KEY)
+
+
+
+
+
+def get_query_embedding(query: str):
+    """
+    Automatically detect OpenAI API version and generate embedding.
+    Supports:
+    - old API: openai==0.28 (Embedding.create)
+    - new API: openai>=1.0 (client.embeddings.create)
+    """
+
+    # Try NEW API (openai>=1.0)
+    try:
+        client = OpenAI()
+        response = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=query
+        )
+        embedding = response.data[0].embedding
+        print("🔵 Using NEW OpenAI API (embeddings.create)")
+        return embedding
+
+    except Exception as e1:
+        print("⚠️ New API failed, trying OLD API...")
+
+        # Try OLD API (openai==0.28)
+        try:
+            response = openai.Embedding.create(
+                model="text-embedding-3-small",
+                input=query
+            )
+            embedding = response["data"][0]["embedding"]
+            print("🟢 Using OLD OpenAI API (Embedding.create)")
+            return embedding
+
+        except Exception as e2:
+            print("❌ Both new & old OpenAI embedding calls failed.")
+            print("New API error:", e1)
+            print("Old API error:", e2)
+            return None
+        
+
 
 
 # -------------------------------------------------------------------
@@ -47,17 +92,9 @@ def get_index():
 # EMBED QUERY
 # -------------------------------------------------------------------
 def embed_query(query: str):
-    """Embed query text with full safety."""
-    try:
-        resp = openai.Embedding.create(
-            model=EMBED_MODEL,
-            input=query
-        )
-        return resp["data"][0]["embedding"]
+    """Unified embedding wrapper (auto-detect new/old OpenAI API)."""
+    return get_query_embedding(query)
 
-    except Exception as e:
-        print("❌ Query embedding failed:", e)
-        return None
 
 
 # -------------------------------------------------------------------
@@ -193,12 +230,9 @@ def run_rag_test(
 ):
     print("🚀 Running RAG test from Airflow...")
 
-    from rag_pipeline import run_rag_pipeline  
+    result = get_rag_context(query=query, top_k=3)
 
-    result = run_rag_pipeline(
-        query=query,
-        output_path=output_path
-    )
+    save_rag_output(result, out_path=output_path)
 
     print("🎉 RAG test completed inside Airflow task.")
     return result

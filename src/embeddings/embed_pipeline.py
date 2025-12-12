@@ -145,7 +145,7 @@ def embed_text(text: str):
 
     for ch in chunks:
         try:
-            vec = embed_single_text(ch)   # ← 使用兼容函數
+            vec = embed_single_text(ch)   
             vectors.append(vec)
         except Exception as e:
             print("❌ Chunk embedding failed:", e)

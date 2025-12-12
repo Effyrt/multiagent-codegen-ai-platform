@@ -1,6 +1,10 @@
+version: '3.8'
+
 services:
   airflow-standalone:
-    image: apache/airflow:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: airflow-standalone
     ports:
       - "8081:8080"
@@ -10,21 +14,47 @@ services:
       - ./plugins:/opt/airflow/plugins
       - ./config:/opt/airflow/config
       - ./data:/opt/airflow/data
-      - ./src:/opt/airflow/src   
-
+      - ./src:/opt/airflow/src
 
     env_file:
       - .env
 
     environment:
+      # Airflow Core
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
+      - AIRFLOW__CORE__DAGS_ARE_PAUSED_AT_CREATION=false
+      - AIRFLOW__CORE__LOAD_EXAMPLES=false
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+      
+      # Web UI
       - AIRFLOW__WEBSERVER__DEFAULT_UI_LOCALE=en
+      - AIRFLOW__WEBSERVER__EXPOSE_CONFIG=true
+      - AIRFLOW__WEBSERVER__RBAC=true
+      
+      # Locale
       - LANG=en_US.UTF-8
       - LC_ALL=en_US.UTF-8
+      
+      # Admin User
       - _AIRFLOW_WWW_USER_CREATE=true
       - _AIRFLOW_WWW_USER_USERNAME=admin
       - _AIRFLOW_WWW_USER_PASSWORD=admin
+      - _AIRFLOW_WWW_USER_ROLE=Admin
+      
+      # Python Path
+      - PYTHONPATH=/opt/airflow/src
+      
+      # API Keys (from .env)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - PINECONE_API_KEY=${PINECONE_API_KEY}
+      - PINECONE_INDEX_NAME=${PINECONE_INDEX_NAME}
+      - EMBEDDING_MODEL=${EMBEDDING_MODEL}
 
     command: standalone
-    restart: always
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s

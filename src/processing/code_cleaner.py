@@ -120,6 +120,19 @@ def clean_snippet_corpus(
     return cleaned_items
 
 
+
+# ============================================================
+# Wrapper for Unified DAG Compatibility
+# ============================================================
+
+def clean_all_snippets():
+    """
+    Unified DAG expects this function name clean_snippet_corpus().
+    """
+    print("[Wrapper] clean_all_snippets() → calling clean_snippet_corpus()")
+    return clean_snippet_corpus()
+
+
 # ============================================================
 # CLI TESTING BLOCK
 # ============================================================
